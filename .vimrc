@@ -28,19 +28,31 @@ set shortmess+=c
 set colorcolumn=80
 highlight ColorColumn ctermbg=0 guibg=lightgrey
 
+" Fix issue with background highlighting in WSL
+set t_ut=""
+
+" Creates directory structure for Vim Plug if it is missing
+if empty(glob('~/.vim/autoload/plug.vim'))
+    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+          \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
 call plug#begin('~/.vim/plugged')
-
-Plug 'ycm-core/YouCompleteMe'
-Plug 'morhetz/gruvbox'
-Plug 'jremmen/vim-ripgrep'
-Plug 'tpope/vim-fugitive'
-Plug 'leafgarland/typescript-vim'
-Plug 'vim-utils/vim-man'
-Plug 'lyuts/vim-rtags'
-Plug 'git@github.com:kien/ctrlp.vim.git'
-Plug 'mbbill/undotree'
-
+    Plug 'morhetz/gruvbox'
+    Plug 'jremmen/vim-ripgrep'
+    Plug 'tpope/vim-fugitive'
+    Plug 'leafgarland/typescript-vim'
+    Plug 'vim-utils/vim-man'
+    Plug 'lyuts/vim-rtags'
+    Plug 'ctrlpvim/ctrlp.vim'
+    Plug 'mbbill/undotree'
+    Plug 'pangloss/vim-javascript'
+    Plug 'mxw/vim-jsx'
+    Plug 'ycm-core/YouCompleteMe'
 call plug#end()
+
+let g:ycm_clangd_binary_path = "/usr/bin/clangd"
 
 colorscheme gruvbox
 set background=dark
@@ -58,10 +70,18 @@ let g:netrw_winsize = 25
 
 let g:ctrlp_use_caching = 0
 
+" Window selections
 nnoremap <leader>h :wincmd h<CR>
 nnoremap <leader>j :wincmd j<CR>
 nnoremap <leader>k :wincmd k<CR>
 nnoremap <leader>l :wincmd l<CR>
+
+" Window splits
+nnoremap <leader>L :vsplit<CR> :wincmd l<CR>
+nnoremap <leader>H :vsplit<CR> :wincmd h<CR>
+nnoremap <leader>J :split<CR> :wincmd j<CR>
+nnoremap <leader>K :split<CR> :wincmd k<CR>
+
 nnoremap <leader>u :UndotreeShow<CR>
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 nnoremap <Leader>ps :Rg<SPACE>
@@ -70,33 +90,12 @@ nnoremap <silent> <Leader>- :vertical resize -5<CR>
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
 
-fun! GoYCM()
-    nnoremap <buffer> <silent> <leader>gd :YcmCompleter GoTo<CR>
-    nnoremap <buffer> <silent> <leader>gr :YcmCompleter GoToReferences<CR>
-    nnoremap <buffer> <silent> <leader>rr :YcmCompleter RefactorRename<space>
-endfun
+inoremap jj <Esc>
 
 function! s:check_back_space() abort
     let col = col('.') - 1
     return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
-
-fun! GoCoc()
-    inoremap <buffer> <silent><expr> <TAB>
-    \ pumvisible() ? "\<C-n>" :
-    \ <SID>check_back_space() ? "\<TAB>" :
-    \ coc#refresh()
-
-    inoremap <buffer> <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-    inoremap <buffer> <silent><expr> <C-space> coc#refresh()
-
-    " GoTo code navigation.
-    nmap <buffer> <leader>gd <Plug>(coc-definition)
-    nmap <buffer> <leader>gy <Plug>(coc-type-definition)
-    nmap <buffer> <leader>gi <Plug>(coc-implementation)
-    nmap <buffer> <leader>gr <Plug>(coc-references)
-    nnoremap <buffer> <leader>cr :CocRestart
-endfun
 
 fun! TrimWhitespace()
     let l:save = winsaveview()
@@ -105,5 +104,3 @@ fun! TrimWhitespace()
 endfun
 
 autocmd BufWritePre * :call TrimWhitespace()
-autocmd FileType typescript :call GoYCM()
-autocmd FileType cpp,cxx,h,hpp,c :call GoCoc()
